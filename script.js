@@ -1,143 +1,125 @@
-const options = {
-    method: 'GET',
-    headers: {
-        'X-RapidAPI-Key': 'aa91cad371mshcadf34f778cf57bp1fa753jsn8d69e9cfa5db',
-        'X-RapidAPI-Host': 'weather-by-api-ninjas.p.rapidapi.com'
-    }
-};
+// Open-Meteo: no API key required
+const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=';
+const WX_URL  = 'https://api.open-meteo.com/v1/forecast';
 
-const getWeather = (city) =>{
-    cityName.innerHTML=city;
-fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city='+city, options)
-    .then(response => response.json())
-    .then(response => {
+// dom helper
+const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = (v ?? 'N/A'); };
 
-        cloud_pct.innerHTML = response.cloud_pct
-        temp.innerHTML = response.temp
-        feels_like.innerHTML = response.feels_like
-        humidity.innerHTML = response.humidity
-        min_temp.innerHTML = response.min_temp
-        max_temp.innerHTML = response.max_temp
-        wind_speed.innerHTML = response.wind_speed
-        wind_degrees.innerHTML = response.wind_degrees
-        sunrise.innerHTML = response.sunrise
-        sunset.innerHTML = response.sunset
-    }
-    )
-
-    .catch(err => console.error(err))
+function toTime(s) {
+  // Open-Meteo returns ISO times; show local time nicely
+  if (!s) return 'N/A';
+  return new Date(s).toLocaleTimeString();
 }
 
-var a;
-function abc(){
-    var b=document.getElementById("city").value;
-    this.a=b;
-    getWeather(b);
-    event.preventDefault();
+async function geocode(city) {
+  const r = await fetch(GEO_URL + encodeURIComponent(city));
+  if (!r.ok) throw new Error('Geocoding failed');
+  const j = await r.json();
+  if (!j.results || !j.results.length) throw new Error('City not found');
+  const { latitude, longitude, name, country } = j.results[0];
+  return { lat: latitude, lon: longitude, label: `${name}${country ? ', ' + country : ''}` };
 }
-getWeather("Delhi");
 
-fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=delhi', options)
-    .then(response => response.json())
-    .then(response => {
+async function getWeather(city) {
+  try {
+    const { lat, lon, label } = await geocode(city);
+    set('cityName', label);
 
-       aa.innerHTML= response.cloud_pct
-       ab.innerHTML=response.temp
-       ac.innerHTML= response.feels_like
-       ad.innerHTML = response.humidity
-       ae.innerHTML = response.min_temp
-       af.innerHTML = response.max_temp
-       ag.innerHTML = response.wind_speed
-       ah.innerHTML = response.wind_degrees
-       ai.innerHTML = response.sunrise
-       aj.innerHTML= response.sunset
+    // current + daily min/max + sunrise/sunset
+    const params = new URLSearchParams({
+      latitude: lat,
+      longitude: lon,
+      current: 'temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,cloud_cover',
+      daily: 'temperature_2m_max,temperature_2m_min,sunrise,sunset',
+      timezone: 'auto'
+    });
+
+    const res = await fetch(`${WX_URL}?${params.toString()}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(JSON.stringify(data));
+
+    const c = data.current || {};
+    const d = (data.daily && data.daily.time && data.daily.time.length) ? data.daily : null;
+    const i = 0; // today
+
+    // top cards
+    set('temp', c.temperature_2m);
+    set('feels_like', c.apparent_temperature);
+    set('humidity', c.relative_humidity_2m);
+    set('cloud_pct', c.cloud_cover);                 // cloud cover in %
+    set('wind_speed', c.wind_speed_10m);
+    set('wind_degrees', c.wind_direction_10m);
+
+    set('min_temp', d ? d.temperature_2m_min[i] : 'N/A');
+    set('max_temp', d ? d.temperature_2m_max[i] : 'N/A');
+    set('sunrise',  d ? toTime(d.sunrise[i]) : 'N/A');
+    set('sunset',   d ? toTime(d.sunset[i])  : 'N/A');
+  } catch (e) {
+    console.error(e);
+    ['temp','feels_like','humidity','cloud_pct','wind_speed','wind_degrees','min_temp','max_temp','sunrise','sunset']
+      .forEach(id => set(id, 'N/A'));
+  }
+}
+
+async function fillRow(prefix, city) {
+  try {
+    const { lat, lon } = await geocode(city);
+    const params = new URLSearchParams({
+      latitude: lat,
+      longitude: lon,
+      current: 'temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,cloud_cover',
+      daily: 'temperature_2m_max,temperature_2m_min,sunrise,sunset',
+      timezone: 'auto'
+    });
+    const res = await fetch(`${WX_URL}?${params.toString()}`);
+    const d = await res.json();
+    if (!res.ok) throw new Error(JSON.stringify(d));
+
+    const c = d.current || {};
+    const day = d.daily;
+    const i = 0;
+
+    const S = (s, v) => set(prefix + s, v);
+    S('a', c.cloud_cover);
+    S('b', c.temperature_2m);
+    S('c', c.apparent_temperature);
+    S('d', c.relative_humidity_2m);
+    S('e', day.temperature_2m_min[i]);
+    S('f', day.temperature_2m_max[i]);
+    S('g', c.wind_speed_10m);
+    S('h', c.wind_direction_10m);
+    S('i', toTime(day.sunrise[i]));
+    S('j', toTime(day.sunset[i]));
+  } catch (e) {
+    console.error('Row failed:', city, e);
+    ['a','b','c','d','e','f','g','h','i','j'].forEach(s => set(prefix + s, 'N/A'));
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('form');
+  const cityInput = document.getElementById('city');
+  form?.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    getWeather(cityInput.value.trim());
+  });
+
+  // initial + table
+  getWeather('Delhi');
+  const rows = [
+    ['b','Shanghai'],
+    ['a','Delhi'],
+    ['c','London'],
+    ['d','Miami'],
+    ['e','Toronto'],
+    ['f','New York']
+  ];
+
+  // throttle to be polite to the API
+  (async () => {
+    for (const [p, c] of rows) {
+      await fillRow(p, c);
+      await new Promise(r => setTimeout(r, 400));
     }
-    )
-    .catch(err => console.error(err))
-    fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=shanghai', options)
-    .then(response => response.json())
-    .then(response => {
-
-       ba.innerHTML= response.cloud_pct
-       bb.innerHTML=response.temp
-       bc.innerHTML= response.feels_like
-       bd.innerHTML = response.humidity
-       be.innerHTML = response.min_temp
-       bf.innerHTML = response.max_temp
-       bg.innerHTML = response.wind_speed
-       bh.innerHTML = response.wind_degrees
-       bi.innerHTML = response.sunrise
-       bj.innerHTML= response.sunset
-    }
-    )
-    .catch(err => console.error(err))
-    fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=london', options)
-    .then(response => response.json())
-    .then(response => {
-
-       ca.innerHTML= response.cloud_pct
-       cb.innerHTML=response.temp
-       cc.innerHTML= response.feels_like
-       cd.innerHTML = response.humidity
-       ce.innerHTML = response.min_temp
-       cf.innerHTML = response.max_temp
-       cg.innerHTML = response.wind_speed
-       ch.innerHTML = response.wind_degrees
-       ci.innerHTML = response.sunrise
-       cj.innerHTML= response.sunset
-    }
-    )
-    .catch(err => console.error(err))
-    fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=miami', options)
-    .then(response => response.json())
-    .then(response => {
-
-       da.innerHTML= response.cloud_pct
-       db.innerHTML=response.temp
-       dc.innerHTML= response.feels_like
-       dd.innerHTML = response.humidity
-       de.innerHTML = response.min_temp
-       df.innerHTML = response.max_temp
-       dg.innerHTML = response.wind_speed
-       dh.innerHTML = response.wind_degrees
-       di.innerHTML = response.sunrise
-       dj.innerHTML= response.sunset
-    }
-    )
-    .catch(err => console.error(err))
-
-    fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=toronto', options)
-    .then(response => response.json())
-    .then(response => {
-
-       ea.innerHTML= response.cloud_pct
-       eb.innerHTML=response.temp
-       ec.innerHTML= response.feels_like
-       ed.innerHTML = response.humidity
-       ee.innerHTML = response.min_temp
-       ef.innerHTML = response.max_temp
-       eg.innerHTML = response.wind_speed
-       eh.innerHTML = response.wind_degrees
-       ei.innerHTML = response.sunrise
-       ej.innerHTML= response.sunset
-    }
-    )
-    .catch(err => console.error(err))
-
-    fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=new york', options)
-    .then(response => response.json())
-    .then(response => {
-
-       fa.innerHTML= response.cloud_pct
-       fb.innerHTML=response.temp
-       fc.innerHTML= response.feels_like
-       fd.innerHTML = response.humidity
-       fe.innerHTML = response.min_temp
-       ff.innerHTML = response.max_temp
-       fg.innerHTML = response.wind_speed
-       fh.innerHTML = response.wind_degrees
-       fi.innerHTML = response.sunrise
-       fj.innerHTML= response.sunset
-    }
-    )
-    .catch(err => console.error(err))
+  })();
+});

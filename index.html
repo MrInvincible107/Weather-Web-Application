@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+<style>
+        /* Define animations */
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Apply animations to elements */
+        .card {
+            animation: slideInDown 1s ease-out;
+        }
+
+        h1 {
+            animation: fadeIn 1s ease-out;
+        }
+
+        .navbar-brand {
+            animation: rotate 3s infinite linear;
+        }
+
+        .btn-outline-success {
+            animation: bounce 1s infinite alternate;
+        }
+ .btn-tailwind {
+            @apply bg-green-500 text-white font-bold py-2 px-4 rounded;
+        }
+
+        .btn-tailwind:hover {
+            @apply bg-green-700;
+        }
+
+        /* Animation for table rows and cells */
+        tbody tr:hover {
+            @apply bg-gray-100;
+        }
+
+        tbody tr:hover td {
+            @apply border-gray-200;
+        }
+   .soft-bg {
+        background-color: #f3f4f6; /* You can adjust the color code as per your preference */
+    }
+    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Weather</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  </head>
+  <body class="soft-bg">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Weather</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" href="about.html">About this application</a>
+              </li>
+             
+              
+              
+            </ul>
+            <form class="d-flex" role="search">
+              <input id="city" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit" id="submit" onclick="abc()">Search</button>
+            </form>
+          </div>
+        </div>
+      </nav>
+
+
+      <div class="container">
+        <h1 class="my-4-text-center">
+            Weather for <span id="cityName">Delhi</span>
+        </h1>
+        <main>
+            <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+              <div class="col">
+                <div class="card mb-4 rounded-3 shadow-sm">
+                  <div class="card-header py-3">
+                    <h4 class="my-0 fw-normal">Temperature</h4>
+                  </div>
+                  <div class="card-body">
+                    <h1 class="card-title pricing-card-title"><small class="text-body-secondary fw-light"></small></h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                      <li>Temperature is <span id="temp"></span><span>&#8451;</span></li>
+                      <li>Minimum Temperature is <span id="min_temp"></span><span>&#8451;</span></li>
+                      <li>Maximum Temperature is <span id="max_temp"></span><span>&#8451;</span></li>
+
+                    </ul>
+                    
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card mb-4 rounded-3 shadow-sm">
+                  <div class="card-header py-3">
+                    <h4 class="my-0 fw-normal">Humidity</h4>
+                  </div>
+                  <div class="card-body">
+                    <h1 class="card-title pricing-card-title"><small class="text-body-secondary fw-light"></small></h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                      <li>Cloud PCT is <span id="cloud_pct"></span></li>
+                      <li>Feels Like is <span id="feels_like"></span><span>&#8451;</span></li>
+                      <li>Humidity is <span id="humidity"></span><span>%</span></li>
+ 
+                    </ul>
+                    
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card mb-4 rounded-3 shadow-sm border-primary">
+                  <div class="card-header py-3 text-bg-primary border-primary">
+                    <h4 class="my-0 fw-normal">Wind Speed</h4>
+                  </div>
+                  <div class="card-body">
+                    <h1 class="card-title pricing-card-title"><small class="text-body-secondary fw-light"></small></h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                      <li>Wind Speed is <span id="wind_speed"></span> km/hr</li>
+                      <li>Wind Degree is <span id="wind_degrees"></span><span>&#8451;</span></li>
+                      <li>Sunset Time is <span id="sunset"></span></li>
+                      <li>Sunrise Time is <span id="sunrise"></span></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+        
+            <h2 class="display-6 text-center mb-4">Commonly Searched cities</h2>
+        
+            <div class="table-responsive">
+              <table class="table text-center">
+                <thead>
+                  <tr>
+                    <th style="width: 34%;"></th>
+                    <th style="width: 22%;">Cloud Pct  </th>
+                        <th style="width: 22%;">Temp (&#8451;)</th>
+                        <th style="width: 22%;">Feels Like (&#8451;)</th>
+                        <th style="width: 22%;">Humidity <span>(%)</span></th>
+                        <th style="width: 22%;">Min Temp (&#8451;)</th>
+                        <th style="width: 22%;">Max Temp (&#8451;)</th>
+                        <th style="width: 22%;">Wind Speed (km/hr)</th>
+                        <th style="width: 22%;">Wind Degrees </th>
+                        <th style="width: 22%;">Sunrise </th>
+                        <th style="width: 22%;">Sunset </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row" class="text-start">Shanghai</th>
+                    <td><span id="ba"></span></td>
+                    <td><span id="bb"></span></td>
+                    <td><span id="bc"></span></td>
+                    <td><span id="bd"></span></td>
+                    <td><span id="be"></span></td>
+                    <td><span id="bf"></span></td>
+                    <td><span id="bg"></span></td>
+                    <td><span id="bh"></span></td>
+                    <td><span id="bi"></span></td>
+                    <td><span id="bj"></span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-start">Delhi</th>
+                    <td><span id="aa"></span></td>
+                    <td><span id="ab"></span></td>
+                    <td><span id="ac"></span></td>
+                    <td><span id="ad"></span></td>
+                    <td><span id="ae"></span></td>
+                    <td><span id="af"></span></td>
+                    <td><span id="ag"></span></td>
+                    <td><span id="ah"></span></td>
+                    <td><span id="ai"></span></td>
+                    <td><span id="aj"></span></td>
+                  </tr>
+                </tbody>
+        
+                <tbody>
+                  <tr>
+                    <th scope="row" class="text-start">London</th>
+                    <td><span id="ca"></span></td>
+                    <td><span id="cb"></span></td>
+                    <td><span id="cc"></span></td>
+                    <td><span id="cd"></span></td>
+                    <td><span id="ce"></span></td>
+                    <td><span id="cf"></span></td>
+                    <td><span id="cg"></span></td>
+                    <td><span id="ch"></span></td>
+                    <td><span id="ci"></span></td>
+                    <td><span id="cj"></span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-start">Miami</th>
+                    <td><span id="da"></span></td>
+                    <td><span id="db"></span></td>
+                    <td><span id="dc"></span></td>
+                    <td><span id="dd"></span></td>
+                    <td><span id="de"></span></td>
+                    <td><span id="df"></span></td>
+                    <td><span id="dg"></span></td>
+                    <td><span id="dh"></span></td>
+                    <td><span id="di"></span></td>
+                    <td><span id="dj"></span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-start">Toronto</th>
+                    <td><span id="ea"></span></td>
+                    <td><span id="eb"></span></td>
+                    <td><span id="ec"></span></td>
+                    <td><span id="ed"></span></td>
+                    <td><span id="ee"></span></td>
+                    <td><span id="ef"></span></td>
+                    <td><span id="eg"></span></td>
+                    <td><span id="eh"></span></td>
+                    <td><span id="ei"></span></td>
+                    <td><span id="ej"></span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="text-start">New York</th>
+                    <td><span id="fa"></span></td>
+                    <td><span id="fb"></span></td>
+                    <td><span id="fc"></span></td>
+                    <td><span id="fd"></span></td>
+                    <td><span id="fe"></span></td>
+                    <td><span id="ff"></span></td>
+                    <td><span id="fg"></span></td>
+                    <td><span id="fh"></span></td>
+                    <td><span id="fi"></span></td>
+                    <td><span id="fj"></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </main>
+      </div>
+      
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  </body>
+</html>
